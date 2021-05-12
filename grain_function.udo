@@ -89,7 +89,7 @@ opcode features_sound_granulation, 0, Siiiiiiiiiiiiiii
     to_granula:
     schedule(Sinstr, 0, idur_to_time, iamp, ipan, iphase_w, iphase_tab, idur_to_sample, ifreq, ihop, ifile)
     ihop += ir_to_sample
-    ihop = ihop%(ilen - ir_to_sample)
+    ihop = ihop%(ilen - idur_to_sample)
     rireturn
 endop
 
