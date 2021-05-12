@@ -56,8 +56,8 @@ endop
 
 
 // funzioni per la generazione ---> sound granulation
-opcode features_sound_granulation, 0, Siiiiiiiiiiiiiiii
-    Sinstr, ifile, if_min, if_max, ia_min, ia_max, ip_min, ip_max, ipan_min, ipan_max, idur_min, idur_max, ihop_min, ihop_max, idel_min, idel_max, imode_value xin
+opcode features_sound_granulation, 0, Siiiiiiiiiiiiiii
+    Sinstr, ifile, if_min, if_max, ia_min, ia_max, ip_min, ip_max, ipan_min, ipan_max, idur_min, idur_max, ihop_min, ihop_max, idel_min, idel_max xin
     ilen = ftlen(ifile)
     ihop init 0 // inizializzazione per OLA
 
@@ -79,43 +79,35 @@ opcode features_sound_granulation, 0, Siiiiiiiiiiiiiiii
         ir_to_sample = ceil(sr * ir_grain)
         ir_to_time = ir_to_sample/sr
 
-        if(imode_value == 0) then
-            ii, ij, ik = ifreq, ifreq, 1/ifreq
-        elseif(imode_value == 1) then
-            ii, ij, ik = 1, ifreq, 1/ifreq
-        endif
-
-        // informazioni per modulo finestra e calcolo punto di fase
-        idurata_totale = ilen/sr // durata totale sound file
-        idurata_totale_to_time = idurata_totale * ik
-        idurata_totale_to_sample = ceil(idurata_totale_to_time * sr)
-        idurata_totale_to_time = idurata_totale_to_sample/sr
-
         // mappatura fase
         iphase_w = map(iphase, 0, idur_to_sample, 0, 1)
-        iphase_tab = map(iphase, 0, idurata_totale_to_sample, 0, 1)
+        iphase_tab = map(iphase, 0, ilen, 0, 1)
 
             timout(0, idel, to_granula)
             reinit aggiorna
 
     to_granula:
-    schedule(Sinstr, 0, idur_to_time, iamp, ipan, iphase_w, iphase_tab, idur_to_sample, ii, ij, ihop, ifile)
+    schedule(Sinstr, 0, idur_to_time, iamp, ipan, iphase_w, iphase_tab, idur_to_sample, ifreq, ihop, ifile)
     ihop += ir_to_sample
-    ihop = ihop%idurata_totale_to_sample
+    ihop = ihop < ilen ? ihop : ihop - ilen
     rireturn
 endop
 
 
-opcode sound_granulation, aa, iiiiiiiii
-    ip4, ip5, ip6, ip7, ip8, ip9, ip10, ip11, ip12 xin
+opcode sound_granulation, aa, iiiiiiii
+    ip4, ip5, ip6, ip7, ip8, ip9, ip10, ip11 xin
     setksmps(1)
+
+    ilen = ftlen(ip11)
 
     ki init 0
     if(ki < ip8) then
         kndx = abs(ip6 - ki) * ip9
-        koverlapp = abs(ip7 - ip11) * ip10
+        koverlapp = abs(ip7 - ip10)
+        kindex = kndx + koverlapp
+        kindex = kindex < ilen ? kindex : kindex - ilen
         ainv = w_hann(ki, ip8)
-        agrano = p4 * ainv * tablei:a(kndx + koverlapp, ip12)
+        agrano = p4 * ainv * tablei:a(kindex, ip11)
         aleft = (agrano * sqrt(ip5))/2
         aright = (agrano * sqrt(1 - ip5))/2
         ki += 1
