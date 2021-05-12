@@ -89,7 +89,7 @@ opcode features_sound_granulation, 0, Siiiiiiiiiiiiiii
     to_granula:
     schedule(Sinstr, 0, idur_to_time, iamp, ipan, iphase_w, iphase_tab, idur_to_sample, ifreq, ihop, ifile)
     ihop += ir_to_sample
-    ihop = ihop < ilen ? ihop : ihop - ilen
+    ihop = ihop%(ilen - ir_to_sample)
     rireturn
 endop
 
@@ -105,13 +105,13 @@ opcode sound_granulation, aa, iiiiiiii
         kndx = abs(ip6 - ki) * ip9
         koverlapp = abs(ip7 - ip10)
         kindex = kndx + koverlapp
-        kindex = kindex < ilen ? kindex : kindex - ilen
         ainv = w_hann(ki, ip8)
         agrano = p4 * ainv * tablei:a(kindex, ip11)
-        aleft = (agrano * sqrt(ip5))/2
-        aright = (agrano * sqrt(1 - ip5))/2
         ki += 1
     endif
+     
+     aleft = (agrano * sqrt(ip5))/2
+     aright = (agrano * sqrt(1 - ip5))/2
 
 xout(aleft, aright)
 endop
